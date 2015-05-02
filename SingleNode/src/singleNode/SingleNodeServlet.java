@@ -15,40 +15,42 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 
-public class SingleNodeServlet extends HttpServlet{
-	String DBdirec = "";
+public class SingleNodeServlet extends HttpServlet {
+	String DBdirec = "/home/honolulu413/wordIndex";
 	IndexDBWrapper db;
 	JSONParser parser;
-	
+
 	@Override
 	public void init(ServletConfig config) {
 		db = new IndexDBWrapper(DBdirec);
 		db.setup();
 		parser = new JSONParser();
 	}
-	
+
 	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
 		response.setContentType("text/html");
 		String word = request.getParameter("word");
-		WordOccurence wordOccurence = db.getWordIndex(word);
-		JSONObject obj = new JSONObject();
-		obj.put("word", word);
-		
-		if (wordOccurence != null) {
-			obj.put("idf", wordOccurence.getIdf());
-			JSONArray list = new JSONArray();
-			for (UrlOccurence url: wordOccurence.getUrlOccurences()) {
-				list.add(url);
+		if (word != null) {
+			WordOccurence wordOccurence = db.getWordIndex(word);
+			JSONObject obj = new JSONObject();
+			obj.put("word", word);
+
+			if (wordOccurence != null) {
+				obj.put("idf", wordOccurence.getIdf());
+				JSONArray list = new JSONArray();
+				for (UrlOccurence url : wordOccurence.getUrlOccurences()) {
+					list.add(url.toString());
+				}
+				obj.put("doclist", list);
 			}
-			obj.put("doclist", list);
+
+			PrintWriter out = response.getWriter();
+			out.println(obj.toJSONString());
 		}
-		
-		PrintWriter out = response.getWriter();
-		out.println(obj.toJSONString());
 	}
-	
+
 	@Override
 	public void destroy() {
 		db.close();
